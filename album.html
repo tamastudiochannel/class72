@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Album Kelas — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  .wrap{ max-width:960px; margin:0 auto; padding:var(--space-6) var(--space-4) var(--space-9); }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--color-secondary); margin-bottom:var(--space-5); }
+  .head-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-5); gap:var(--space-4); flex-wrap:wrap; }
+  .page-title{ font-family:var(--font-display); font-size:var(--fs-xl); font-weight:var(--fw-bold); }
+  .btn-add{ padding:11px 20px; border-radius:var(--radius-pill); background:var(--color-primary); color:#fff; font-weight:var(--fw-semibold); font-size:var(--fs-xs); }
+
+  .masonry{ columns:3 220px; column-gap:var(--space-4); }
+  .masonry-item{ break-inside:avoid; margin-bottom:var(--space-4); border-radius:var(--radius-md); overflow:hidden; border:1px solid var(--color-border); background:var(--color-surface); box-shadow:var(--shadow-sm); }
+  .masonry-item img{ width:100%; display:block; }
+  .masonry-item__caption{ padding:var(--space-3); font-size:var(--fs-2xs); color:var(--color-muted); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(26,26,46,.55); display:none; align-items:center; justify-content:center; z-index:50; padding:var(--space-4); }
+  .overlay.is-open{ display:flex; }
+  .modal{ width:100%; max-width:420px; background:var(--color-surface); border-radius:var(--radius-lg); padding:var(--space-6); }
+  .modal h2{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); margin-bottom:var(--space-2); }
+  .modal p{ font-size:var(--fs-sm); color:var(--color-muted); margin-bottom:var(--space-4); }
+  .modal input{ width:100%; padding:11px 14px; border-radius:var(--radius-sm); border:1px solid var(--color-border); font:inherit; font-size:var(--fs-sm); margin-bottom:var(--space-4); }
+  .modal-actions{ display:flex; gap:var(--space-3); }
+  .btn{ flex:1; padding:12px; border-radius:var(--radius-sm); font-weight:var(--fw-semibold); font-size:var(--fs-sm); text-align:center; }
+  .btn-primary{ background:var(--color-primary); color:#fff; }
+  .btn-ghost{ background:var(--color-bg); border:1px solid var(--color-border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="index.html">← Kembali ke beranda</a>
+  <div class="head-row">
+    <h1 class="page-title">Album Kelas 7.2</h1>
+    <button class="btn-add" id="btnAdd">+ Tambah Foto</button>
+  </div>
+
+  <div class="masonry" id="masonry"></div>
+</div>
+
+<div class="overlay" id="overlayAdd">
+  <div class="modal">
+    <h2>Tambah ke Album</h2>
+    <p>Fotomu akan tayang setelah disetujui admin, biar album tetap aman dan pantas untuk semua.</p>
+    <input type="url" id="fPhotoUrl" placeholder="Link foto/gambar">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancelAdd">Batal</button>
+      <button class="btn btn-primary" id="btnSubmitAdd">Kirim</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlayPending">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:2.2rem; margin-bottom:var(--space-3);">⏳</div>
+    <h2>Menunggu Verifikasi Admin</h2>
+    <p>Foto kamu masuk antrean. Setelah disetujui, otomatis muncul di album ini.</p>
+    <button class="btn btn-primary" id="btnPendingOk" style="width:100%;">Mengerti</button>
+  </div>
+</div>
+
+<script type="module">
+  import { watchAuthTier, requireTier, TIER_MESSAGE } from '/src/lib/auth-guard.js';
+
+  const $ = (id) => document.getElementById(id);
+  let currentTier = 'guest';
+
+  // Foto contoh — di produksi diganti onValue(ref(db,'album/approved'))
+  const demoPhotos = [
+    { url:'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500', caption:'Study group bareng' },
+    { url:'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=500', caption:'Class trip' },
+    { url:'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500', caption:'Lab IPA' },
+    { url:'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=500', caption:'Upacara bendera' },
+  ];
+
+  $('masonry').innerHTML = demoPhotos.map(p => `
+    <div class="masonry-item">
+      <img src="${p.url}" alt="${p.caption}" loading="lazy">
+      <div class="masonry-item__caption">${p.caption}</div>
+    </div>`).join('');
+
+  $('btnAdd').addEventListener('click', () => {
+    if (!requireTier(currentTier, 'verified', () => alert(TIER_MESSAGE.verified))) return;
+    $('overlayAdd').classList.add('is-open');
+  });
+  $('btnCancelAdd').addEventListener('click', () => $('overlayAdd').classList.remove('is-open'));
+
+  $('btnSubmitAdd').addEventListener('click', () => {
+    const url = $('fPhotoUrl').value.trim();
+    if (!url) { alert('Masukkan link foto dulu.'); return; }
+    // TODO: push(ref(db,'album/pending'), { url, uid, name, submittedAt: serverTimestamp() })
+    $('overlayAdd').classList.remove('is-open');
+    $('fPhotoUrl').value = '';
+    $('overlayPending').classList.add('is-open');
+  });
+  $('btnPendingOk').addEventListener('click', () => $('overlayPending').classList.remove('is-open'));
+
+  watchAuthTier((tier) => { currentTier = tier; });
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>

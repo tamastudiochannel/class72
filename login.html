@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masuk — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  body{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:
+    radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 40%),
+    radial-gradient(circle at 85% 85%, color-mix(in srgb, var(--color-secondary) 12%, transparent), transparent 45%),
+    var(--color-bg); padding:var(--space-4); }
+
+  .auth-card{ width:100%; max-width:420px; background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); padding:var(--space-7); box-shadow:var(--shadow-lg); text-align:center; }
+  .auth-mark{ width:56px; height:56px; margin:0 auto var(--space-4); border-radius:var(--radius-md);
+    background:linear-gradient(135deg,var(--color-primary),var(--color-accent)); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:var(--fw-bold); color:#fff; font-size:var(--fs-lg); }
+  .auth-card h1{ font-family:var(--font-display); font-size:var(--fs-lg); font-weight:var(--fw-bold); margin-bottom:6px; }
+  .auth-card p{ font-size:var(--fs-sm); color:var(--color-muted); margin-bottom:var(--space-6); }
+  .btn-google{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:var(--space-3);
+    padding:13px; border-radius:var(--radius-sm); border:1px solid var(--color-border); background:var(--color-surface);
+    font-weight:var(--fw-semibold); font-size:var(--fs-sm); transition:box-shadow var(--transition-base), transform var(--transition-base);
+  }
+  .btn-google:hover{ box-shadow:var(--shadow-sm); transform:translateY(-1px); }
+  .g-ic{ width:20px; height:20px; border-radius:50%; background:conic-gradient(#4285F4 0 25%, #34A853 0 50%, #FBBC05 0 75%, #EA4335 0 100%); }
+  .back-link{ display:block; margin-top:var(--space-5); font-size:var(--fs-xs); color:var(--color-muted); }
+
+  /* ---- Modal overlay ---- */
+  .overlay{ position:fixed; inset:0; background:rgba(26,26,46,.55); display:none; align-items:center; justify-content:center; z-index:50; padding:var(--space-4); }
+  .overlay.is-open{ display:flex; }
+  .modal{ width:100%; max-width:440px; background:var(--color-surface); border-radius:var(--radius-lg); padding:var(--space-6); box-shadow:var(--shadow-lg); animation:pop .25s ease; }
+  @keyframes pop{ from{ opacity:0; transform:scale(.96) translateY(6px);} to{opacity:1; transform:none;} }
+  .modal h2{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); margin-bottom:var(--space-2); }
+  .modal p{ font-size:var(--fs-sm); color:var(--color-muted); margin-bottom:var(--space-5); }
+  .modal-actions{ display:flex; gap:var(--space-3); margin-top:var(--space-5); }
+  .btn{ flex:1; padding:12px; border-radius:var(--radius-sm); font-weight:var(--fw-semibold); font-size:var(--fs-sm); text-align:center; }
+  .btn-primary{ background:var(--color-primary); color:#fff; }
+  .btn-ghost{ background:var(--color-bg); border:1px solid var(--color-border); }
+  .field-group{ text-align:left; margin-bottom:var(--space-4); }
+  .field-group label{ display:block; font-size:var(--fs-xs); font-weight:var(--fw-semibold); margin-bottom:6px; }
+  .field-group input{ width:100%; padding:11px 14px; border-radius:var(--radius-sm); border:1px solid var(--color-border); font:inherit; font-size:var(--fs-sm); }
+  .field-group input:focus{ border-color:var(--color-secondary); outline:none; }
+  .field-hint{ font-size:var(--fs-2xs); color:var(--color-muted); margin-top:4px; }
+  .status-box{ text-align:center; }
+  .status-box .big-ic{ font-size:2.4rem; margin-bottom:var(--space-3); }
+</style>
+</head>
+<body>
+
+<div class="auth-card">
+  <div class="auth-mark">7.2</div>
+  <h1>Masuk ke Kelas 7.2</h1>
+  <p>Login dengan akun Google sekolah/pribadi kamu untuk mulai menjelajah.</p>
+  <button class="btn-google" id="btnGoogle"><span class="g-ic"></span> Masuk dengan Google</button>
+  <a class="back-link" href="index.html">← Kembali sebagai tamu</a>
+</div>
+
+<!-- Step 1: apakah siswa/siswi -->
+<div class="overlay" id="overlayAsk">
+  <div class="modal">
+    <h2>Apakah kamu siswa/siswi Class 7.2?</h2>
+    <p>Kalau iya, kami perlu verifikasi singkat dari admin sebelum akun MyProfil kamu aktif.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnNo">Tidak, saya tamu</button>
+      <button class="btn btn-primary" id="btnYes">Ya, saya siswa/siswi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: form klaim identitas -->
+<div class="overlay" id="overlayForm">
+  <div class="modal">
+    <h2>Data Verifikasi</h2>
+    <p>Isi sesuai data kamu di kelas — admin akan mencocokkan sebelum menyetujui.</p>
+    <div class="field-group">
+      <label>Nama lengkap</label>
+      <input type="text" id="fName" placeholder="Contoh: Achmad Ikhsan">
+    </div>
+    <div class="field-group">
+      <label>Nomor absen <span style="font-weight:400;color:var(--color-muted)">(opsional)</span></label>
+      <input type="text" id="fNo" placeholder="Contoh: 04">
+    </div>
+    <div class="field-group">
+      <label>Nomor WhatsApp aktif</label>
+      <input type="tel" id="fWa" placeholder="08xxxxxxxxxx">
+      <div class="field-hint">Dipakai admin untuk konfirmasi via chat WA — bukan ditampilkan ke publik.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancelForm">Batal</button>
+      <button class="btn btn-primary" id="btnSubmitForm">Kirim</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: menunggu verifikasi -->
+<div class="overlay" id="overlayWaiting">
+  <div class="modal status-box">
+    <div class="big-ic">⏳</div>
+    <h2>Menunggu Respon Admin</h2>
+    <p>Data kamu sudah terkirim. Pantau WhatsApp untuk konfirmasi dari admin. Sementara ini kamu login sebagai tamu.</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:none; width:100%;" id="btnWaitingOk">Mengerti</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: sukses (dipicu manual di sini untuk demo; di produksi dipicu saat admin verifikasi) -->
+<div class="overlay" id="overlaySuccess">
+  <div class="modal status-box">
+    <div class="big-ic">🎉</div>
+    <h2 id="successTitle">Selamat, kamu sudah login!</h2>
+    <p>Akun MyProfil kamu sudah aktif. Semua fitur khusus siswa/siswi sudah bisa dipakai.</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:none; width:100%;" id="btnSuccessOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { loginWithGoogle } from '/src/lib/firebase.js';
+
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.add('is-open');
+  const hide = (id) => $(id).classList.remove('is-open');
+
+  $('btnGoogle').addEventListener('click', async () => {
+    // TODO: aktifkan saat sudah deploy dengan domain resmi (popup butuh domain terverifikasi)
+    // const user = await loginWithGoogle();
+    show('overlayAsk');
+  });
+
+  $('btnNo').addEventListener('click', () => {
+    hide('overlayAsk');
+    location.href = 'index.html'; // tetap masuk sebagai tamu permanen
+  });
+
+  $('btnYes').addEventListener('click', () => {
+    hide('overlayAsk');
+    show('overlayForm');
+  });
+
+  $('btnCancelForm').addEventListener('click', () => hide('overlayForm'));
+
+  $('btnSubmitForm').addEventListener('click', () => {
+    const name = $('fName').value.trim();
+    const wa = $('fWa').value.trim();
+    if (!name || !wa) { alert('Nama dan nomor WhatsApp wajib diisi.'); return; }
+
+    // TODO: tulis ke Realtime Database path `verification_requests/{uid}`
+    // { name, no, wa, status: 'pending', requestedAt: serverTimestamp() }
+    // Path ini sengaja tidak bisa dibaca client biasa (lihat rules.json) —
+    // hanya admin (lewat Cloud Function/Admin SDK atau dasbor admin dengan
+    // akses server-side) yang bisa melihat nomor WA-nya.
+
+    hide('overlayForm');
+    show('overlayWaiting');
+  });
+
+  $('btnWaitingOk').addEventListener('click', () => hide('overlayWaiting'));
+
+  // Demo trigger saja — di produksi ini dipicu oleh listener realtime saat
+  // status verification_requests/{uid}/status berubah jadi 'approved'
+  $('btnSuccessOk').addEventListener('click', () => {
+    hide('overlaySuccess');
+    location.href = 'myprofil.html';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  body{ height:100vh; overflow:hidden; }
+  .chat-shell{ display:flex; height:100vh; }
+
+  .chat-list{ width:300px; flex-shrink:0; background:var(--color-surface); border-right:1px solid var(--color-border); display:flex; flex-direction:column; }
+  .chat-list__head{ padding:var(--space-4) var(--space-4) var(--space-3); border-bottom:1px solid var(--color-border); }
+  .chat-list__head a{ font-size:var(--fs-2xs); font-weight:var(--fw-semibold); color:var(--color-secondary); }
+  .chat-list__head h1{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); margin-top:6px; }
+  .chat-tabs{ display:flex; gap:6px; padding:var(--space-3) var(--space-4); }
+  .chat-tab{ flex:1; text-align:center; padding:8px; border-radius:var(--radius-sm); font-size:var(--fs-2xs); font-weight:var(--fw-semibold); background:var(--color-bg); border:1px solid var(--color-border); }
+  .chat-tab.is-active{ background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+  .chat-list__items{ overflow-y:auto; flex:1; }
+  .chat-row{ display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border); }
+  .chat-row:hover, .chat-row.is-active{ background:var(--color-bg); }
+  .chat-row__avatar{ width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:var(--fw-bold); font-size:var(--fs-xs); color:#fff; background:linear-gradient(135deg,var(--color-secondary),var(--color-primary)); }
+  .chat-row__meta{ min-width:0; flex:1; }
+  .chat-row__meta b{ font-size:var(--fs-sm); display:block; }
+  .chat-row__meta span{ font-size:var(--fs-2xs); color:var(--color-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+
+  .chat-main{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  .chat-head{ height:var(--header-h); flex-shrink:0; display:flex; align-items:center; gap:var(--space-3); padding:0 var(--space-5); border-bottom:1px solid var(--color-border); background:var(--color-surface); }
+  .chat-head__avatar{ width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:var(--fw-bold); font-size:var(--fs-2xs); color:#fff; background:linear-gradient(135deg,var(--color-secondary),var(--color-primary)); }
+  .chat-head b{ font-size:var(--fs-sm); display:block; }
+  .chat-head span{ font-size:var(--fs-2xs); color:var(--color-muted); }
+  .chat-head__spacer{ flex:1; }
+  .call-btn{ width:38px; height:38px; border-radius:50%; background:var(--color-bg); border:1px solid var(--color-border); display:flex; align-items:center; justify-content:center; font-size:var(--fs-sm); }
+  .call-btn:hover{ background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+
+  .chat-body{ flex:1; overflow-y:auto; padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-3); background:
+    repeating-linear-gradient(135deg, var(--color-bg) 0 40px, #F1EEE6 40px 80px); }
+  .msg{ max-width:70%; padding:10px 14px; border-radius:var(--radius-md); font-size:var(--fs-sm); line-height:var(--lh-normal); box-shadow:var(--shadow-sm); }
+  .msg.theirs{ align-self:flex-start; background:var(--color-surface); border-bottom-left-radius:4px; }
+  .msg.mine{ align-self:flex-end; background:var(--color-primary); color:#fff; border-bottom-right-radius:4px; }
+  .msg .sender{ font-size:var(--fs-2xs); font-weight:var(--fw-bold); opacity:.7; margin-bottom:2px; display:block; }
+  .msg.sticker{ background:none; box-shadow:none; padding:0; font-size:2.6rem; line-height:1; }
+
+  .chat-input{ display:flex; align-items:center; gap:var(--space-3); padding:var(--space-4) var(--space-5); border-top:1px solid var(--color-border); background:var(--color-surface); position:relative; }
+  .chat-input input{ flex:1; border:1px solid var(--color-border); border-radius:var(--radius-pill); padding:11px 18px; font:inherit; font-size:var(--fs-sm); background:var(--color-bg); }
+  .chat-input input:focus{ outline:none; border-color:var(--color-secondary); }
+  .icon-btn{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--fs-md); background:var(--color-bg); border:1px solid var(--color-border); flex-shrink:0; }
+  .icon-btn.send{ background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+
+  .sticker-panel{ position:absolute; bottom:70px; left:var(--space-5); width:280px; max-height:260px; overflow-y:auto;
+    background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); padding:var(--space-3);
+    display:none; grid-template-columns:repeat(6,1fr); gap:6px; }
+  .sticker-panel.is-open{ display:grid; }
+  .sticker-panel button{ font-size:1.4rem; padding:4px; border-radius:6px; }
+  .sticker-panel button:hover{ background:var(--color-bg); }
+
+  @media (max-width: 760px){ .chat-list{ position:fixed; inset:0; z-index:30; width:100%; } .chat-list.is-hidden{ display:none; } }
+</style>
+
+<style>
+  .chat-lock{ position:fixed; inset:0; z-index:80; background:var(--color-bg); display:none; align-items:center; justify-content:center; padding:var(--space-4); }
+  .chat-lock.show{ display:flex; }
+  .chat-lock__card{ max-width:380px; text-align:center; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-7); box-shadow:var(--shadow-lg); }
+  .chat-lock__card .ic{ font-size:2.4rem; margin-bottom:var(--space-4); }
+  .chat-lock__card h2{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); margin-bottom:8px; }
+  .chat-lock__card p{ font-size:var(--fs-sm); color:var(--color-muted); margin-bottom:var(--space-5); line-height:var(--lh-relaxed); }
+  .chat-lock__card a.btn{ display:inline-block; background:var(--color-primary); color:#fff; padding:11px 24px; border-radius:var(--radius-pill); font-weight:var(--fw-semibold); font-size:var(--fs-sm); }
+</style>
+</head>
+<body>
+
+<div class="chat-lock" id="chatLock">
+  <div class="chat-lock__card">
+    <div class="ic">🔒</div>
+    <h2>Khusus Siswa/i Kelas 7.2</h2>
+    <p>Chat grup &amp; pribadi cuma bisa diakses siswa/i yang sudah login Google dan terverifikasi MyProfil. Tamu &amp; akun yang belum diverifikasi belum bisa masuk ke sini.</p>
+    <a href="login.html" class="btn">Masuk / Verifikasi Sekarang</a>
+  </div>
+</div>
+
+<div class="chat-shell" id="chatShell">
+
+  <aside class="chat-list" id="chatList">
+    <div class="chat-list__head">
+      <a href="index.html">← Beranda</a>
+      <h1>Chat</h1>
+    </div>
+    <div class="chat-tabs">
+      <button class="chat-tab is-active" data-tab="grup">Grup Kelas</button>
+      <button class="chat-tab" data-tab="pribadi">Pribadi</button>
+    </div>
+    <div class="chat-list__items" id="chatItems"></div>
+  </aside>
+
+  <main class="chat-main">
+    <div class="chat-head">
+      <div class="chat-head__avatar" id="headAvatar"><img src="/public/images/default-avatar.png" alt=""></div>
+      <div><b id="headName">Grup Kelas 7.2</b><span id="headSub">29 anggota</span></div>
+      <div class="chat-head__spacer"></div>
+      <button class="call-btn" id="btnCallVoice" title="Panggilan suara">📞</button>
+      <button class="call-btn" id="btnCallVideo" title="Panggilan video">🎥</button>
+    </div>
+
+    <div class="chat-body" id="chatBody"></div>
+
+    <div class="chat-input">
+      <button class="icon-btn" id="btnSticker">😊</button>
+      <input type="text" id="msgInput" placeholder="Tulis pesan... (login MyProfil untuk kirim)">
+      <button class="icon-btn send" id="btnSend">➤</button>
+
+      <div class="sticker-panel" id="stickerPanel"></div>
+    </div>
+  </main>
+</div>
+
+<div class="call-overlay" id="callOverlay">
+  <div class="call-overlay__bar">
+    <span id="callRoomLabel">Panggilan — Grup Kelas 7.2</span>
+    <button id="btnEndCall">Tutup ✕</button>
+  </div>
+  <div id="jitsiContainer" style="flex:1;"></div>
+</div>
+
+<style>
+  .call-overlay{ position:fixed; inset:0; z-index:90; background:#000; display:none; flex-direction:column; }
+  .call-overlay.show{ display:flex; }
+  .call-overlay__bar{ display:flex; align-items:center; justify-content:space-between; padding:var(--space-3) var(--space-5); background:#111; color:#fff; }
+  .call-overlay__bar button{ background:var(--color-danger); color:#fff; padding:8px 16px; border-radius:var(--radius-sm); font-size:var(--fs-xs); font-weight:var(--fw-semibold); }
+</style>
+
+<script type="module">
+  import { db, ref, push, onValue, serverTimestamp } from '/src/lib/firebase.js';
+  import { watchAuthTier } from '/src/lib/auth-guard.js';
+
+  const $ = (id) => document.getElementById(id);
+  let currentTier = 'guest';
+  let currentProfil = null;
+
+  // 43 stiker bawaan (emoji sebagai placeholder — bisa diganti aset custom nanti)
+  const STICKERS = ['😂','🔥','❤️','👍','😭','🎉','😎','🙏','💯','😴','🤔','👀','😅','🥳','😤','🫡',
+    '💪','🎮','⚽','📚','🌙','☀️','🍕','🎵','😱','🤝','👋','😇','🤯','🥲','🫠','🎯',
+    '🚀','⭐','💤','🧠','😆','🙌','✅','❌','😐','🫶','🤙'];
+
+  $('stickerPanel').innerHTML = STICKERS.map(s => `<button data-s="${s}">${s}</button>`).join('');
+
+  const demoGroupMsgs = [
+    { sender:'Renai Sistha', text:'Reminder kas ya guys 💰', mine:false },
+    { sender:'Achmad Ikhsan', text:'Siap kak, nanti sore aku transfer', mine:true },
+    { sender:null, sticker:'🔥', mine:true },
+  ];
+
+  function renderMessages(msgs) {
+    $('chatBody').innerHTML = msgs.map(m => {
+      if (m.sticker) return `<div class="msg sticker ${m.mine?'mine':'theirs'}">${m.sticker}</div>`;
+      return `<div class="msg ${m.mine?'mine':'theirs'}">${!m.mine ? `<span class="sender">${m.sender}</span>`:''}${m.text}</div>`;
+    }).join('');
+    $('chatBody').scrollTop = $('chatBody').scrollHeight;
+  }
+  renderMessages(demoGroupMsgs);
+
+  const demoContacts = [
+    { name:'Grup Kelas 7.2', sub:'Renai: Reminder kas ya guys 💰', type:'grup' },
+    { name:'Renai Sistha', sub:'Udah dibayar blm kasnya?', type:'pribadi' },
+    { name:'Asyadda Triputra', sub:'Mabar yuk 🎮', type:'pribadi' },
+  ];
+
+  function renderContacts(tab) {
+    const list = demoContacts.filter(c => c.type === tab);
+    $('chatItems').innerHTML = list.map((c,i) => `
+      <div class="chat-row ${i===0?'is-active':''}" data-name="${c.name}">
+        <div class="chat-row__avatar"><img src="/public/images/default-avatar.png" alt=""></div>
+        <div class="chat-row__meta"><b>${c.name}</b><span>${c.sub}</span></div>
+      </div>`).join('');
+  }
+  renderContacts('grup');
+
+  document.querySelectorAll('.chat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.chat-tab').forEach(t=>t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      renderContacts(tab.dataset.tab);
+    });
+  });
+
+  $('btnSticker').addEventListener('click', () => $('stickerPanel').classList.toggle('is-open'));
+
+  $('stickerPanel').addEventListener('click', (e) => {
+    if (e.target.dataset.s) {
+      // TODO: push(ref(db, path), { sticker: e.target.dataset.s, uid, createdAt: serverTimestamp() })
+      $('stickerPanel').classList.remove('is-open');
+    }
+  });
+
+  $('btnSend').addEventListener('click', () => {
+    const text = $('msgInput').value.trim();
+    if (!text) return;
+    // TODO: push(ref(db, 'chat_group'), { uid, name, text, createdAt: serverTimestamp() })
+    // untuk private: push(ref(db, `chat_private/${threadId}`), {...})
+    $('msgInput').value = '';
+  });
+
+  // Seluruh halaman chat terkunci kecuali siswa/i sudah login Google DAN terverifikasi MyProfil
+  watchAuthTier((tier, profil) => {
+    currentTier = tier;
+    currentProfil = profil;
+    const locked = tier !== 'verified';
+    $('chatLock').classList.toggle('show', locked);
+    $('chatShell').style.visibility = locked ? 'hidden' : 'visible';
+  });
+
+  // Panggilan: Jitsi Meet External API — gratis, nggak perlu server video
+  // sendiri. Nama room dibuat unik per kontak yang lagi dibuka biar nggak
+  // nabrak sama panggilan kelas lain.
+  let jitsiApi = null;
+  function loadJitsiScript() {
+    return new Promise((resolve, reject) => {
+      if (window.JitsiMeetExternalAPI) return resolve();
+      const s = document.createElement('script');
+      s.src = 'https://meet.jit.si/external_api.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function startCall(withVideo) {
+    if (currentTier !== 'verified') { alert('Panggilan cuma buat siswa/i yang sudah login & terverifikasi.'); return; }
+    try { await loadJitsiScript(); } catch { alert('Gagal memuat modul panggilan. Cek koneksi internet.'); return; }
+
+    const activeName = document.getElementById('headName').textContent;
+    const roomName = `Kelas72-${activeName}`.replace(/\s+/g, '-');
+    document.getElementById('callRoomLabel').textContent = `Panggilan — ${activeName}`;
+    document.getElementById('callOverlay').classList.add('show');
+    document.getElementById('jitsiContainer').innerHTML = '';
+
+    jitsiApi = new window.JitsiMeetExternalAPI('meet.jit.si', {
+      roomName,
+      parentNode: document.getElementById('jitsiContainer'),
+      width: '100%', height: '100%',
+      userInfo: { displayName: currentProfil?.name || 'Siswa 7.2' },
+      configOverwrite: { startWithVideoMuted: !withVideo, prejoinPageEnabled: true },
+      interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone','camera','hangup','chat','tileview','fullscreen'] },
+    });
+
+    jitsiApi.addEventListener('videoConferenceLeft', endCall);
+  }
+
+  function endCall() {
+    if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+    document.getElementById('callOverlay').classList.remove('show');
+  }
+
+  document.getElementById('btnCallVoice').addEventListener('click', () => startCall(false));
+  document.getElementById('btnCallVideo').addEventListener('click', () => startCall(true));
+  document.getElementById('btnEndCall').addEventListener('click', endCall);
+  // Catatan: di app native (Capacitor), Jitsi tetap jalan lewat WebView ini,
+  // tapi izin kamera/mic diambil dari sistem Android (lihat native-app/),
+  // jadi lebih stabil dibanding lewat browser PWA biasa.
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>

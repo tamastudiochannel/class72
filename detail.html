@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil Siswa — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  .profile-wrap{ max-width:640px; margin:0 auto; padding:var(--space-7) var(--space-4); }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--color-secondary); margin-bottom:var(--space-5); }
+  .profile-card{
+    background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg);
+    padding:var(--space-7); text-align:center; box-shadow:var(--shadow-md); position:relative; overflow:hidden;
+  }
+  .profile-card::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:88px;
+    background:linear-gradient(120deg,var(--color-secondary-dark),var(--color-primary-dark));
+  }
+  .profile-avatar{
+    width:96px; height:96px; border-radius:50%; margin:24px auto var(--space-4);
+    display:flex; align-items:center; justify-content:center; position:relative; z-index:2;
+    font-family:var(--font-display); font-weight:var(--fw-bold); font-size:var(--fs-2xl); color:#fff;
+    background:linear-gradient(135deg,var(--color-secondary),var(--color-primary));
+    border:4px solid var(--color-surface); box-shadow:var(--shadow-sm);
+  }
+  .profile-name{ font-family:var(--font-display); font-weight:var(--fw-bold); font-size:var(--fs-xl); margin-bottom:2px; }
+  .profile-no{ font-family:var(--font-mono); font-size:var(--fs-xs); color:var(--color-muted); margin-bottom:var(--space-5); }
+  .profile-fields{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); text-align:left; margin-top:var(--space-5); }
+  .field{ background:var(--color-bg); border:1px solid var(--color-border); border-radius:var(--radius-sm); padding:var(--space-4); }
+  .field label{ display:block; font-size:var(--fs-2xs); text-transform:uppercase; letter-spacing:.06em; color:var(--color-muted); margin-bottom:4px; }
+  .field span{ font-size:var(--fs-sm); font-weight:var(--fw-semibold); }
+  .field.locked span{ color:var(--color-muted); font-weight:var(--fw-medium); font-style:italic; font-size:var(--fs-xs); }
+  .field.locked .lock-ic{ margin-right:4px; }
+  .status-pill{ display:inline-block; margin-top:var(--space-5); padding:6px 16px; border-radius:var(--radius-pill); font-size:var(--fs-xs); font-weight:var(--fw-semibold); }
+  .status-pill.filled{ background:color-mix(in srgb, var(--color-success) 14%, transparent); color:var(--color-success); }
+  .status-pill.empty{ background:color-mix(in srgb, var(--color-warning) 18%, transparent); color:#8a6d00; }
+  .login-hint{
+    margin-top:var(--space-6); padding:var(--space-4); border-radius:var(--radius-sm);
+    background:color-mix(in srgb, var(--color-secondary) 8%, transparent); font-size:var(--fs-xs); color:var(--color-ink-soft);
+  }
+  .login-hint a{ color:var(--color-secondary); font-weight:var(--fw-semibold); }
+</style>
+</head>
+<body>
+<div class="profile-wrap">
+  <a class="back-link" href="index.html">← Kembali ke daftar siswa</a>
+
+  <div class="profile-card">
+    <div class="profile-avatar" id="pAvatar"><img src="/public/images/default-avatar.png" alt=""></div>
+    <div class="profile-name" id="pName">Memuat...</div>
+    <div class="profile-no" id="pNo">No. Absen —</div>
+
+    <div class="profile-fields">
+      <div class="field"><label>Jenis Kelamin</label><span id="pGender">—</span></div>
+      <div class="field"><label>Cita-cita</label><span id="pCita">—</span></div>
+      <div class="field locked" id="pDobField"><label>Tanggal Lahir</label><span>🔒 Login untuk melihat</span></div>
+      <div class="field"><label>Status Data</label><span id="pStatusText">—</span></div>
+    </div>
+
+    <div id="statusPillWrap"></div>
+
+    <div class="login-hint" id="loginHint">
+      Info seperti tanggal lahir hanya bisa dilihat oleh siswa/siswi yang sudah login akun MyProfil.
+      <a href="login.html">Masuk sekarang →</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { watchAuth, db, ref, get } from '/src/lib/firebase.js';
+
+  const params = new URLSearchParams(location.search);
+  const no = params.get('no') || '04';
+
+  // TODO: ganti dengan pembacaan real dari Realtime Database (path: students/{no})
+  // Struktur data publik vs privat dipisah agar Database Rules bisa membatasi
+  // akses tanggal lahir hanya untuk user yang sudah login (lihat rules.json).
+  const demoStudent = {
+    no, name: 'Achmad Ikhsan', gender: 'Laki-laki', cita: 'Programmer & game developer',
+    filled: true, dob: '5 September 2013'
+  };
+
+  function render(isLoggedIn) {
+    const s = demoStudent;
+    // Avatar pakai ikon default (lihat elemen #pAvatar di HTML) — nanti bisa
+    // diganti foto asli kalau siswa mengisi link foto profil di myprofil.html
+    document.getElementById('pName').textContent = s.name;
+    document.getElementById('pNo').textContent = `No. Absen ${s.no}`;
+    document.getElementById('pGender').textContent = s.gender;
+    document.getElementById('pCita').textContent = s.cita || 'Belum diisi';
+    document.getElementById('pStatusText').textContent = s.filled ? 'Lengkap' : 'Belum lengkap';
+
+    const pill = document.createElement('div');
+    pill.className = `status-pill ${s.filled ? 'filled' : 'empty'}`;
+    pill.textContent = s.filled ? '✓ Data sudah diisi' : '○ Menunggu diisi pemilik';
+    document.getElementById('statusPillWrap').innerHTML = '';
+    document.getElementById('statusPillWrap').appendChild(pill);
+
+    if (isLoggedIn) {
+      document.getElementById('pDobField').classList.remove('locked');
+      document.getElementById('pDobField').innerHTML = `<label>Tanggal Lahir</label><span>${s.dob}</span>`;
+      document.getElementById('loginHint').style.display = 'none';
+    }
+  }
+
+  render(false);
+  watchAuth((user) => { if (user) render(true); });
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>

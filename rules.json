@@ -1,0 +1,101 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "students": {
+      "$no": {
+        "public": {
+          ".read": true,
+          ".write": false
+        },
+        "private": {
+          ".read": "auth != null",
+          ".write": false
+        }
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "profileClaim": {
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+
+    "admins": {
+      ".read": false,
+      ".write": false,
+      "$adminId": {
+        "pinHash": { ".read": false, ".write": false }
+      }
+    },
+
+    "status_feed": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$postId": {
+        ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid || newData.child('uid').val() === auth.uid)"
+      }
+    },
+
+    "chat_group": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "chat_private": {
+      "$threadId": {
+        ".read": "auth != null && $threadId.contains(auth.uid)",
+        ".write": "auth != null && $threadId.contains(auth.uid)"
+      }
+    },
+
+    "album": {
+      "approved": { ".read": true },
+      "pending": { ".read": "auth != null", ".write": "auth != null" }
+    },
+
+    "verification_requests": {
+      ".read": false,
+      ".write": "auth != null"
+    },
+
+    "suggestions": {
+      "$suggestionId": {
+        ".read": "auth != null && (data.child('uid').val() === auth.uid || root.child('admin_uids').child(auth.uid).exists())",
+        ".write": true
+      }
+    },
+
+    "events": {
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    "event_registrations": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "site_theme": {
+      ".read": true,
+      ".write": false
+    },
+
+    "site_content": {
+      ".read": true,
+      ".write": false
+    },
+
+    "site_content_log": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

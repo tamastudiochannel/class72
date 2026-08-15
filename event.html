@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Kelas — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  .wrap{ max-width:760px; margin:0 auto; padding:var(--space-6) var(--space-4) var(--space-9); }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--color-secondary); margin-bottom:var(--space-5); }
+  .page-title{ font-family:var(--font-display); font-size:var(--fs-xl); font-weight:var(--fw-bold); margin-bottom:2px; }
+  .page-sub{ color:var(--color-muted); font-size:var(--fs-sm); margin-bottom:var(--space-6); }
+
+  .gate-banner{ display:none; background:color-mix(in srgb, var(--color-warning) 14%, transparent); border:1px solid color-mix(in srgb, var(--color-warning) 40%, transparent);
+    border-radius:var(--radius-sm); padding:var(--space-3) var(--space-4); font-size:var(--fs-xs); color:#7a5f00; margin-bottom:var(--space-6); }
+  .gate-banner.show{ display:block; }
+
+  .event-card{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:var(--space-5); box-shadow:var(--shadow-sm); }
+  .event-card__banner{ height:120px; background:linear-gradient(120deg,var(--color-secondary-dark),var(--color-primary-dark)); position:relative; display:flex; align-items:flex-end; padding:var(--space-4); }
+  .event-card__banner span{ background:rgba(255,255,255,.16); color:#fff; font-size:var(--fs-2xs); padding:4px 12px; border-radius:var(--radius-pill); font-weight:var(--fw-semibold); }
+  .event-card__body{ padding:var(--space-5); }
+  .event-card__body h3{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); margin-bottom:4px; }
+  .event-card__meta{ font-size:var(--fs-xs); color:var(--color-muted); margin-bottom:var(--space-4); }
+  .event-card__meta b{ color:var(--color-ink); }
+  .event-card__foot{ display:flex; align-items:center; justify-content:space-between; }
+  .participants{ font-size:var(--fs-xs); color:var(--color-muted); }
+  .btn-register{ padding:10px 20px; border-radius:var(--radius-pill); background:var(--color-primary); color:#fff; font-weight:var(--fw-semibold); font-size:var(--fs-xs); }
+  .btn-register:disabled{ background:var(--color-border); color:var(--color-muted); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(26,26,46,.55); display:none; align-items:center; justify-content:center; z-index:50; padding:var(--space-4); }
+  .overlay.is-open{ display:flex; }
+  .modal{ width:100%; max-width:400px; background:var(--color-surface); border-radius:var(--radius-lg); padding:var(--space-6); }
+  .modal h2{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); margin-bottom:var(--space-4); }
+  .modal input{ width:100%; padding:11px 14px; border-radius:var(--radius-sm); border:1px solid var(--color-border); font:inherit; font-size:var(--fs-sm); margin-bottom:var(--space-4); }
+  .modal-actions{ display:flex; gap:var(--space-3); }
+  .btn{ flex:1; padding:12px; border-radius:var(--radius-sm); font-weight:var(--fw-semibold); font-size:var(--fs-sm); }
+  .btn-primary{ background:var(--color-primary); color:#fff; }
+  .btn-ghost{ background:var(--color-bg); border:1px solid var(--color-border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="index.html">← Kembali ke beranda</a>
+  <h1 class="page-title">Event Kelas</h1>
+  <p class="page-sub">Fitur khusus aplikasi — daftar event butuh login MyProfil</p>
+
+  <div class="gate-banner" id="gateBanner">🔒 Login MyProfil dulu untuk bisa mendaftar event.</div>
+
+  <div id="eventList"></div>
+</div>
+
+<div class="overlay" id="overlayRegister">
+  <div class="modal">
+    <h2 id="regTitle">Daftar Event</h2>
+    <input type="text" id="fIgn" placeholder="Nama in-game / ID ML">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancelReg">Batal</button>
+      <button class="btn btn-primary" id="btnSubmitReg">Daftar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { watchAuthTier, requireTier, TIER_MESSAGE } from '/src/lib/auth-guard.js';
+
+  const $ = (id) => document.getElementById(id);
+  let currentTier = 'guest';
+
+  // Turnamen ML 16 Agustus sudah selesai — dikosongkan. Admin Utama 1 tinggal
+  // isi array ini lagi lewat modul "Pengadaan Event" begitu ada event baru.
+  const demoEvents = [];
+
+  function renderEvents() {
+    if (!demoEvents.length) {
+      $('eventList').innerHTML = `<div style="text-align:center; padding:var(--space-8) var(--space-4); color:var(--color-muted); font-size:var(--fs-sm);">Belum ada event yang berjalan saat ini. Nantikan pengumuman event berikutnya di sini ya! 👀</div>`;
+      return;
+    }
+    $('eventList').innerHTML = demoEvents.map(ev => `
+      <div class="event-card">
+        <div class="event-card__banner"><span>${ev.date}</span></div>
+        <div class="event-card__body">
+          <h3>${ev.title}</h3>
+          <div class="event-card__meta">${ev.desc}</div>
+          <div class="event-card__foot">
+            <span class="participants">${ev.filled}/${ev.quota} peserta terdaftar</span>
+            <button class="btn-register" data-id="${ev.id}" data-title="${ev.title}">Daftar</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  renderEvents();
+
+  $('eventList').addEventListener('click', (e) => {
+    if (!e.target.matches('.btn-register')) return;
+    if (!requireTier(currentTier, 'verified', () => { $('gateBanner').classList.add('show'); window.scrollTo({top:0, behavior:'smooth'}); })) return;
+    $('regTitle').textContent = `Daftar — ${e.target.dataset.title}`;
+    $('overlayRegister').classList.add('is-open');
+  });
+
+  $('btnCancelReg').addEventListener('click', () => $('overlayRegister').classList.remove('is-open'));
+  $('btnSubmitReg').addEventListener('click', () => {
+    const ign = $('fIgn').value.trim();
+    if (!ign) { alert('Isi nama in-game dulu.'); return; }
+    // TODO: set(ref(db, `event_registrations/${uid}`), { eventId, ign, registeredAt: serverTimestamp() })
+    $('overlayRegister').classList.remove('is-open');
+    $('fIgn').value = '';
+    alert('Berhasil daftar! Sampai jumpa di turnamen 🎮');
+  });
+
+  watchAuthTier((tier) => { currentTier = tier; if (tier === 'verified') $('gateBanner').classList.remove('show'); });
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>

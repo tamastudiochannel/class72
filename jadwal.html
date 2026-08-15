@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jadwal &amp; Piket — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  .wrap{ max-width:920px; margin:0 auto; padding:var(--space-6) var(--space-4) var(--space-9); }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--color-secondary); margin-bottom:var(--space-5); }
+  .page-title{ font-family:var(--font-display); font-size:var(--fs-xl); font-weight:var(--fw-bold); margin-bottom:2px; }
+  .page-sub{ color:var(--color-muted); font-size:var(--fs-sm); margin-bottom:var(--space-6); }
+
+  .notice{ background:color-mix(in srgb, var(--color-warning) 14%, transparent); border:1px solid color-mix(in srgb, var(--color-warning) 40%, transparent);
+    border-radius:var(--radius-sm); padding:var(--space-3) var(--space-4); font-size:var(--fs-xs); color:#7a5f00; margin-bottom:var(--space-6); }
+
+  .day-tabs{ display:flex; gap:6px; overflow-x:auto; margin-bottom:var(--space-5); padding-bottom:4px; }
+  .day-tab{ flex-shrink:0; padding:9px 16px; border-radius:var(--radius-pill); font-size:var(--fs-xs); font-weight:var(--fw-semibold); background:var(--color-surface); border:1px solid var(--color-border); }
+  .day-tab.is-active{ background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+  .day-tab.today::after{ content:"•"; margin-left:4px; }
+
+  .panel{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; margin-bottom:var(--space-7); }
+  .panel__head{ padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; }
+  .panel__head h2{ font-family:var(--font-display); font-size:var(--fs-md); font-weight:var(--fw-bold); }
+  .panel__head span{ font-size:var(--fs-xs); color:var(--color-muted); }
+
+  .lesson-row{ display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--color-border); }
+  .lesson-row:last-child{ border-bottom:none; }
+  .lesson-row__time{ font-family:var(--font-mono); font-size:var(--fs-xs); color:var(--color-muted); width:96px; flex-shrink:0; }
+  .lesson-row__bar{ width:4px; align-self:stretch; border-radius:4px; background:var(--color-accent); flex-shrink:0; }
+  .lesson-row__name{ font-weight:var(--fw-semibold); font-size:var(--fs-sm); }
+  .lesson-row__teacher{ font-size:var(--fs-2xs); color:var(--color-muted); }
+
+  .piket-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--space-4); padding:var(--space-5); }
+  .piket-card{ background:var(--color-bg); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-4); }
+  .piket-card b{ display:block; font-family:var(--font-display); font-size:var(--fs-sm); margin-bottom:var(--space-3); }
+  .piket-card ul{ list-style:none; display:flex; flex-direction:column; gap:6px; }
+  .piket-card li{ font-size:var(--fs-xs); display:flex; align-items:center; gap:6px; }
+  .piket-card li::before{ content:"•"; color:var(--color-accent); }
+  .piket-card li.new-student{ font-weight:var(--fw-semibold); color:var(--color-primary); }
+  .piket-card li.new-student::after{ content:"murid baru"; font-size:9px; background:color-mix(in srgb, var(--color-primary) 15%, transparent); color:var(--color-primary); padding:1px 6px; border-radius:var(--radius-pill); margin-left:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="index.html">← Kembali ke beranda</a>
+  <h1 class="page-title">Jadwal &amp; Piket</h1>
+  <p class="page-sub">Jadwal pelajaran dan giliran piket kelas 7.2, minggu berjalan</p>
+
+  <div class="day-tabs" id="dayTabs"></div>
+
+  <div class="panel">
+    <div class="panel__head">
+      <h2 id="lessonDayTitle">Senin</h2>
+      <span>Tahun Pelajaran 2026–2027</span>
+    </div>
+    <div id="lessonList"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head">
+      <h2>Jadwal Piket Mingguan</h2>
+      <span>6 orang per hari</span>
+    </div>
+    <div class="piket-grid" id="piketGrid"></div>
+  </div>
+</div>
+
+<script>
+  const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+  // Jadwal asli — MTs Miftahul Huda, Tahun Pelajaran 2026-2027
+  const lessonsByDay = {
+    Senin: [
+      ['06.30–07.00','Upacara',''],
+      ['07.00–08.30','Matematika','Suriaty, S.Pd'],
+      ['08.30–09.30','Bahasa Inggris','Andri Maulana, S.Pd'],
+      ['09.30–10.00','Istirahat',''],
+      ['10.00–11.00','IPA','Ida Zubaida, SE'],
+      ['11.00–12.00','Pendidikan Pancasila','Aida Makbullah, S.Ag'],
+      ['12.00–12.30','Sholat Zuhur',''],
+      ['12.30–13.30','Tahsin & Tahfidz',''],
+    ],
+    Selasa: [
+      ['06.30–07.00','Sholat Dhuha',''],
+      ['07.00–08.30','Bahasa Indonesia','Mursin Abdul Karim'],
+      ['08.30–09.30','IPA','Ida Zubaida, SE'],
+      ['09.30–10.00','Istirahat',''],
+      ['10.00–11.00','IPS','Wiwik Wihartanti, S.Pd'],
+      ['11.00–12.00','Fikih','May Munawaroh, S.Pd.I'],
+      ['12.00–12.30','Sholat Zuhur',''],
+      ['12.30–13.30','Tahsin & Tahfidz',''],
+    ],
+    Rabu: [
+      ['06.30–07.00','Sholat Dhuha',''],
+      ['07.00–08.30','Informatika','Ahmad Nurjaya'],
+      ['08.30–09.30','BTQ','Raudlotul Munawaroh, S.Pd.I'],
+      ['09.30–10.00','Istirahat',''],
+      ['10.00–11.00','Bahasa Inggris','Andri Maulana, S.Pd'],
+      ['11.00–12.00','Bahasa Arab','Istikhori, Lc'],
+      ['12.00–12.30','Sholat Zuhur',''],
+      ['12.30–13.30','Tahsin & Tahfidz',''],
+    ],
+    Kamis: [
+      ['06.30–07.00','Sholat Dhuha',''],
+      ['07.00–08.30',"Qur'an Hadist",'H. Lukmanul Hakim, S.Pd.I'],
+      ['08.30–09.30','Seni Rupa','Ahmad Syauqie Muharom'],
+      ['09.30–10.00','Istirahat',''],
+      ['10.00–11.00','Ilmu Imla','Muhammad Jalaluddin, S.Pd'],
+      ['11.00–12.00','SKI','Nur Azizah, S.Pd'],
+      ['12.00–12.30','Sholat Zuhur',''],
+      ['12.30–13.30','Muhadoroh',''],
+    ],
+    Jumat: [
+      ['06.30–07.00','Tadarus Surah Yasin',''],
+      ['07.00–08.30','Bahasa Indonesia','Mursin Abdul Karim'],
+      ['08.30–09.30','Akidah Akhlak','Maimumah Ahfas, S.Pd.I'],
+      ['09.30–10.00','Istirahat',''],
+      ['10.00–11.00','IPS','Wiwik Wihartanti, S.Pd'],
+    ],
+    Sabtu: [
+      ['06.30–07.00','Sholat Dhuha',''],
+      ['07.00–08.30','PJOK','Aprizal Rizki Ramadon, S.Pd'],
+      ['08.30–09.30','Matematika','Suriaty, S.Pd'],
+      ['09.30–10.00','Istirahat',''],
+      ['10.00–11.00','Nahwu','Istikhori, Lc'],
+    ],
+  };
+
+  // Jadwal piket asli kelas 7.2
+  const piketByDay = {
+    Senin: ['Adliya','Syakira','Faqih','Haikal','Raziq'],
+    Selasa: ['Medina','Renai','Abdul Latif','Deni','Yusuf'],
+    Rabu: ['Vanesha','Sekar','Resta','Seto','Aufa'],
+    Kamis: ['Naufal','Dio','Dean','Ihsan','Banyu Alpriyand'],
+    Jumat: ['Bilqis','Naura','Adit','Ahmad'],
+    Sabtu: ['Nanda','Devi','Arziky','Kaffi','Bisma'],
+  };
+
+  const dayTabs = document.getElementById('dayTabs');
+  dayTabs.innerHTML = DAYS.map((d,i) => `<button class="day-tab ${i===0?'is-active':''}" data-day="${d}">${d}</button>`).join('');
+
+  function renderLessons(day) {
+    document.getElementById('lessonDayTitle').textContent = day;
+    document.getElementById('lessonList').innerHTML = lessonsByDay[day].map(([time,name,teacher]) => `
+      <div class="lesson-row">
+        <div class="lesson-row__time">${time}</div>
+        <div class="lesson-row__bar"></div>
+        <div>
+          <div class="lesson-row__name">${name}</div>
+          ${teacher ? `<div class="lesson-row__teacher">${teacher}</div>` : ''}
+        </div>
+      </div>`).join('');
+  }
+  renderLessons('Senin');
+
+  dayTabs.addEventListener('click', (e) => {
+    if (!e.target.dataset.day) return;
+    document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('is-active'));
+    e.target.classList.add('is-active');
+    renderLessons(e.target.dataset.day);
+  });
+
+  document.getElementById('piketGrid').innerHTML = DAYS.map(day => `
+    <div class="piket-card">
+      <b>${day}</b>
+      <ul>${piketByDay[day].map(name => `<li${name==='Bisma'?' class="new-student"':''}>${name}</li>`).join('')}</ul>
+    </div>`).join('');
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>

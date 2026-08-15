@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelas 7.2 — MTs Miftahul Huda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  /* halaman ini khusus preview desain — konten & fungsi asli akan dipecah per halaman */
+  .dev-credit{ display:flex; align-items:center; justify-content:center; gap:var(--space-4); padding:var(--space-5) var(--space-4); flex-wrap:wrap; }
+  .dev-credit img{ height:30px; width:auto; border-radius:6px; object-fit:contain; }
+  .dev-credit span{ font-size:var(--fs-2xs); color:var(--color-muted); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-mark">7.2</div>
+      <div class="sidebar__brand-text">
+        <b>Kelas 7.2</b>
+        <span>MTs Miftahul Huda</span>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <div class="sidebar__section-label">Utama</div>
+      <a class="sidebar__link is-active" href="index.html"><span class="ic">⌂</span> Daftar Siswa</a>
+      <a class="sidebar__link" href="jadwal.html"><span class="ic">◷</span> Jadwal &amp; Piket</a>
+      <a class="sidebar__link" href="status.html"><span class="ic">✎</span> Status Kelas</a>
+      <a class="sidebar__link" href="chat.html" data-requires="verified" style="display:none;"><span class="ic">✉</span> Chat</a>
+      <a class="sidebar__link" href="album.html"><span class="ic">🖼</span> Album Kelas</a>
+      <a class="sidebar__link" href="event.html"><span class="ic">★</span> Event</a>
+
+      <div class="sidebar__section-label">Islami</div>
+      <a class="sidebar__link" href="sholat.html"><span class="ic">☾</span> Jadwal Sholat</a>
+      <a class="sidebar__link" href="quran.html"><span class="ic">📖</span> Al-Qur'an Digital</a>
+
+      <div class="sidebar__section-label">Lainnya</div>
+      <a class="sidebar__link" href="game.html"><span class="ic">🎮</span> Fun Game</a>
+      <a class="sidebar__link" href="tentang.html"><span class="ic">🏫</span> Info Sekolah</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar__toggle" id="sidebarToggle" aria-label="Buka/tutup menu">☰</button>
+      <div class="topbar__spacer"></div>
+      <a href="#" class="topbar__login">Masuk dengan Google</a>
+    </header>
+
+    <div class="content">
+
+      <section class="hero">
+        <span class="hero__eyebrow"><span class="dot"></span> <span id="heroEyebrow">Tema aktif — HUT RI ke-81</span></span>
+        <h1 id="heroTitle">Merdeka belajar, kompak selamanya — Kelas 7.2</h1>
+        <p id="heroSubtitle">Ruang digital resmi kelas 7.2, tempat absensi, status, obrolan, sampai jadwal sholat dan piket harian berkumpul dalam satu atap.</p>
+        <div class="hero__stats" id="heroStats">
+          <div class="hero__stat"><b>29</b><span>Siswa/siswi</span></div>
+          <div class="hero__stat"><b>5</b><span>Admin &amp; moderator</span></div>
+          <div class="hero__stat"><b>17</b><span>Agustus — tema aktif</span></div>
+        </div>
+      </section>
+
+      <a href="#" id="siteBanner" style="display:none; margin-bottom:var(--space-7);">
+        <img id="siteBannerImg" src="" alt="" style="width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); display:block;">
+      </a>
+
+      <div class="ribbon-divider"></div>
+
+      <div class="section-head">
+        <div>
+          <h2>Jelajahi Kelas</h2>
+          <p>Fitur-fitur yang bisa kamu buka hari ini</p>
+        </div>
+      </div>
+      <div class="grid-tiles">
+        <div class="tile"><div class="tile__ic">◷</div><b>Jadwal &amp; Piket</b><span>Lihat jadwal pelajaran &amp; giliran piket minggu ini</span></div>
+        <div class="tile"><div class="tile__ic">★</div><b>Event Kelas</b><span>Turnamen ML &amp; kegiatan lain — perlu login</span></div>
+        <div class="tile"><div class="tile__ic">☾</div><b>Jadwal Sholat</b><span>Tambun Utara, Bekasi — update otomatis</span></div>
+        <div class="tile"><div class="tile__ic">🎮</div><b>Fun Game</b><span>4 game segera hadir</span></div>
+      </div>
+
+      <div class="section-head">
+        <div>
+          <h2>Daftar Siswa/Siswi</h2>
+          <p>Klik salah satu untuk lihat profil publik</p>
+        </div>
+        <span class="section-head__action">Lihat semua →</span>
+      </div>
+      <div class="grid-students" id="studentGrid"></div>
+
+      <div class="dev-credit">
+        <img src="/public/images/tama-studio-logo.jpeg" alt="Tama Studio">
+        <img src="/public/images/pd-nur-cahaya-logo.jpeg" alt="PD Nur Cahaya">
+        <span>Dikembangkan oleh Tama Studio &amp; PD Nur Cahaya</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const students = [
+    ["01","ABDILLAH AKIRA SYADID","L",""],
+    ["02","ABDUL LATIF","L",""],
+    ["03","ACHMAD ADELARD BILFAQIH","L",""],
+    ["04","ACHMAD IKHSAN","L","Programmer & game developer"],
+    ["05","ADLIYA DZAHBIAH AZZALEA","P",""],
+    ["06","AHMAD HAIKAL DZUHRI","L","Pilot"],
+    ["07","ALEEFA LABITSA BILQIS","P",""],
+    ["08","ANANDA BAHARUDDIN","P",""],
+    ["09","ANI NAURA IZZATI BACHTIAR","P",""],
+    ["10","ARZKY WIRAPUTRA PERMANA","L","Atlet sepak bola"],
+    ["11","ASYADDA TRIPUTRA CLEAREST","L","Gamers"],
+    ["12","AUFA RIZAL RAIS","L",""],
+    ["13","DENY FIRMANSYAH","L",""],
+    ["14","DEVI FADHILAH K","P",""],
+    ["15","DIO ARSYAVIN","L",""],
+    ["16","FAQIH SETO ASNAWI","L",""],
+    ["17","FIKKA DEAN SYABAN","L",""],
+    ["18","KAFI ALHABSY","L",""],
+    ["19","MEDINA FATHIYAH HANUM MARZUKI","P",""],
+    ["20","MUHAMMAD IHSAN DANISHWAR","L",""],
+    ["21","MUHAMMAD NAFUAL SHIDIQI","L","Dokter hewan"],
+    ["22","RAZIQ SHIDIQI AL MANOVI","L",""],
+    ["23","RENAI SISTHA","P","Dokter"],
+    ["24","SEKAR NUR HASANAH","P",""],
+    ["25","SYAKIRA LIONA","P",""],
+    ["26","VANESHA DWI SAPITRI","P",""],
+    ["27","YUSUF JAFAR SAPUTRA","L",""],
+    ["28","BANYU ALPRIYAND","L","Polisi"],
+    ["29","BISMA","L",""],
+  ];
+
+  const grid = document.getElementById('studentGrid');
+  grid.innerHTML = students.map(([no,name,gender,cita]) => {
+    const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('');
+    return `
+      <div class="student-card">
+        <div class="student-card__avatar"><img src="/public/images/default-avatar.png" alt=""></div>
+        <div class="student-card__no">No. ${no}</div>
+        <div class="student-card__name">${name.replace(/\b\w/g, c => c)}</div>
+        <div class="student-card__cita">${cita || 'Belum diisi'}</div>
+        <button class="student-card__btn">Lihat Profil</button>
+      </div>`;
+  }).join('');
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('is-open');
+  });
+</script>
+<script type="module">
+  import { db, ref, onValue } from '/src/lib/firebase.js';
+
+  // Konten hero diatur Admin Utama 1 lewat dashboard ("Kelola Tampilan") —
+  // disimpan di site_content/hero, halaman ini tinggal baca live.
+  onValue(ref(db, 'site_content/hero'), (snap) => {
+    if (!snap.exists()) return; // belum pernah diisi admin, pakai teks default di HTML
+    const c = snap.val();
+    if (c.eyebrow) document.getElementById('heroEyebrow').textContent = c.eyebrow;
+    if (c.title) document.getElementById('heroTitle').textContent = c.title;
+    if (c.subtitle) document.getElementById('heroSubtitle').textContent = c.subtitle;
+    if (c.stats && Array.isArray(c.stats)) {
+      document.getElementById('heroStats').innerHTML = c.stats
+        .map(s => `<div class="hero__stat"><b>${s.value}</b><span>${s.label}</span></div>`).join('');
+    }
+  });
+
+  onValue(ref(db, 'site_content/banner'), (snap) => {
+    const el = document.getElementById('siteBanner');
+    if (!snap.exists() || !snap.val().visible) { el.style.display = 'none'; return; }
+    const b = snap.val();
+    document.getElementById('siteBannerImg').src = b.url || '';
+    document.getElementById('siteBannerImg').alt = b.title || '';
+    el.href = b.link || '#';
+    el.style.display = 'block';
+  });
+</script>
+
+<script type="module">
+  import { watchAuthTier } from '/src/lib/auth-guard.js';
+  // Nav item bertanda data-requires="verified" (misal Chat) disembunyikan
+  // total kalau belum boleh diakses — bukan ditampilkan dengan gembok, biar
+  // nggak keliatan kayak bug/fitur rusak.
+  watchAuthTier((tier) => {
+    document.querySelectorAll('.sidebar__link[data-requires="verified"]').forEach(link => {
+      link.style.display = tier === 'verified' ? '' : 'none';
+    });
+  });
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>

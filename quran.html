@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="hut-ri-81">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Al-Qur'an Digital — Kelas 7.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/base.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  .wrap{ max-width:760px; margin:0 auto; padding:var(--space-6) var(--space-4) var(--space-9); }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--color-secondary); margin-bottom:var(--space-5); }
+  .page-title{ font-family:var(--font-display); font-size:var(--fs-xl); font-weight:var(--fw-bold); margin-bottom:var(--space-5); }
+
+  .search-box{ width:100%; padding:12px 16px; border-radius:var(--radius-pill); border:1px solid var(--color-border); font:inherit; font-size:var(--fs-sm); margin-bottom:var(--space-5); }
+
+  .surah-list{ display:grid; gap:var(--space-2); }
+  .surah-row{ display:flex; align-items:center; gap:var(--space-4); background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); }
+  .surah-row__no{ width:34px; height:34px; border-radius:50%; background:var(--color-bg); border:1px solid var(--color-border); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:var(--fs-xs); flex-shrink:0; }
+  .surah-row__meta{ flex:1; min-width:0; }
+  .surah-row__meta b{ font-size:var(--fs-sm); display:block; }
+  .surah-row__meta span{ font-size:var(--fs-2xs); color:var(--color-muted); }
+  .surah-row__arab{ font-family:'Amiri', serif; font-size:var(--fs-lg); color:var(--color-secondary); }
+
+  .ayat-header{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-6); text-align:center; margin-bottom:var(--space-6); }
+  .ayat-header h2{ font-family:var(--font-display); font-size:var(--fs-lg); font-weight:var(--fw-bold); }
+  .ayat-header p{ font-size:var(--fs-xs); color:var(--color-muted); margin-top:4px; }
+  .back-to-list{ display:inline-block; margin-bottom:var(--space-4); font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--color-secondary); }
+
+  .ayat-card{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-5); margin-bottom:var(--space-4); }
+  .ayat-card__no{ font-family:var(--font-mono); font-size:var(--fs-2xs); color:var(--color-muted); margin-bottom:var(--space-3); }
+  .ayat-card__arab{ font-family:'Amiri', serif; font-size:var(--fs-2xl); line-height:2; text-align:right; direction:rtl; margin-bottom:var(--space-4); color:var(--color-ink); }
+  .ayat-card__terjemah{ font-size:var(--fs-sm); color:var(--color-ink-soft); line-height:var(--lh-relaxed); margin-bottom:var(--space-3); }
+  .ayat-card__tafsir-toggle{ font-size:var(--fs-2xs); font-weight:var(--fw-semibold); color:var(--color-secondary); }
+  .ayat-card__tafsir{ display:none; font-size:var(--fs-xs); color:var(--color-muted); background:var(--color-bg); border-radius:var(--radius-sm); padding:var(--space-3); margin-top:var(--space-3); line-height:var(--lh-relaxed); }
+  .ayat-card__tafsir.show{ display:block; }
+  .ayat-card__audio{ width:100%; margin-top:var(--space-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="sholat.html">← Kembali ke Jadwal Sholat</a>
+  <h1 class="page-title">Al-Qur'an Digital</h1>
+
+  <div id="viewList">
+    <input type="text" class="search-box" id="searchSurah" placeholder="Cari nama surah...">
+    <div class="surah-list" id="surahList"><p style="color:var(--color-muted); font-size:var(--fs-sm);">Memuat daftar surah...</p></div>
+  </div>
+
+  <div id="viewAyat" style="display:none;">
+    <a class="back-to-list" href="#" id="btnBackToList">← Daftar Surah</a>
+    <div class="ayat-header">
+      <h2 id="ayatSurahName">—</h2>
+      <p id="ayatSurahMeta">—</p>
+    </div>
+    <div id="ayatList"></div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let allSurah = [];
+
+  // API publik equran.id — Arab, terjemahan, audio per ayat, tafsir per surah
+  async function loadSurahList() {
+    try {
+      const res = await fetch('https://equran.id/api/v2/surat');
+      const json = await res.json();
+      allSurah = json.data;
+      renderSurahList(allSurah);
+    } catch (e) {
+      $('surahList').innerHTML = `<p style="color:var(--color-danger); font-size:var(--fs-sm);">Gagal memuat daftar surah. Coba muat ulang halaman.</p>`;
+    }
+  }
+
+  function renderSurahList(list) {
+    $('surahList').innerHTML = list.map(s => `
+      <div class="surah-row" data-no="${s.nomor}">
+        <div class="surah-row__no">${s.nomor}</div>
+        <div class="surah-row__meta"><b>${s.namaLatin}</b><span>${s.arti} · ${s.jumlahAyat} ayat · ${s.tempatTurun}</span></div>
+        <div class="surah-row__arab">${s.nama}</div>
+      </div>`).join('');
+  }
+
+  $('searchSurah').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    renderSurahList(allSurah.filter(s => s.namaLatin.toLowerCase().includes(q)));
+  });
+
+  $('surahList').addEventListener('click', async (e) => {
+    const row = e.target.closest('.surah-row');
+    if (!row) return;
+    openSurah(row.dataset.no);
+  });
+
+  async function openSurah(no) {
+    $('viewList').style.display = 'none';
+    $('viewAyat').style.display = 'block';
+    $('ayatList').innerHTML = `<p style="color:var(--color-muted); font-size:var(--fs-sm);">Memuat ayat...</p>`;
+    try {
+      const res = await fetch(`https://equran.id/api/v2/surat/${no}`);
+      const json = await res.json();
+      const s = json.data;
+      $('ayatSurahName').textContent = `${s.namaLatin} — ${s.nama}`;
+      $('ayatSurahMeta').textContent = `${s.arti} · ${s.jumlahAyat} ayat · Turun di ${s.tempatTurun}`;
+      $('ayatList').innerHTML = s.ayat.map(a => `
+        <div class="ayat-card">
+          <div class="ayat-card__no">Ayat ${a.nomorAyat}</div>
+          <div class="ayat-card__arab">${a.teksArab}</div>
+          <div class="ayat-card__terjemah">${a.teksIndonesia}</div>
+          <button class="ayat-card__tafsir-toggle" data-target="tafsir-${a.nomorAyat}">Lihat tafsir singkat ▾</button>
+          <div class="ayat-card__tafsir" id="tafsir-${a.nomorAyat}">Memuat tafsir saat dibuka...</div>
+          <audio class="ayat-card__audio" controls src="${a.audio['05']}"></audio>
+        </div>`).join('');
+    } catch (e) {
+      $('ayatList').innerHTML = `<p style="color:var(--color-danger); font-size:var(--fs-sm);">Gagal memuat ayat. Coba lagi.</p>`;
+    }
+  }
+
+  $('ayatList').addEventListener('click', async (e) => {
+    if (!e.target.matches('.ayat-card__tafsir-toggle')) return;
+    const target = document.getElementById(e.target.dataset.target);
+    target.classList.toggle('show');
+    // Tafsir per-surah (bukan per-ayat) di-fetch sekali dan dipotong sesuai nomor ayat kalau tersedia dari API tafsir equran.id
+  });
+
+  $('btnBackToList').addEventListener('click', (e) => {
+    e.preventDefault();
+    $('viewAyat').style.display = 'none';
+    $('viewList').style.display = 'block';
+  });
+
+  loadSurahList();
+</script>
+<script type="module" src="/src/components/footer.js"></script>
+</body>
+</html>
